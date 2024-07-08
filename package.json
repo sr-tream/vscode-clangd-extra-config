@@ -1,0 +1,241 @@
+{
+  "name": "vscode-clangd-extra-config",
+  "displayName": "clangd: Extra config",
+  "description": "Add more clangd options, what passed to command line",
+  "author": "SR_team",
+  "publisher": "sr-team",
+  "license": "MIT",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sr-tream/vscode-clangd-extra-config.git"
+  },
+  "engines": {
+    "vscode": "^1.65.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "C",
+    "C++",
+    "CUDA",
+    "clang",
+    "clangd",
+    "cmake"
+  ],
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:cpp",
+    "onLanguage:cuda-cpp",
+    "onLanguage:objective-c",
+    "onLanguage:objective-cpp"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": [
+      {
+        "title": "clangd: Extra config",
+        "properties": {
+          "clangd.extraConfig.RestartServerOnChange": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Automatically restart `clangd` server, when extra configs changed",
+            "order": 0
+          }
+        }
+      },
+      {
+        "title": "clangd feature options",
+        "properties": {
+        "clangd.extraConfig.features.allScopesCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "If set to true, code completion will include index symbols that are not defined in the scopes (e.g. namespaces) visible from the code completion point. Such completions can insert scope qualifiers"
+        },
+        "clangd.extraConfig.features.backgroundIndex": {
+          "type": "string",
+          "default": "low",
+          "enum": [
+            "disabled",
+            "background",
+            "low",
+            "normal"
+          ],
+          "enumDescriptions": [
+            "Disable background indexing.",
+            "Minimum priority, runs on idle CPUs. May leave 'performance' cores unused.",
+            "Reduced priority compared to interactive work.",
+            "Same priority as other clangd work."
+          ],
+          "description": "Index project code in the background and persist index on disk."
+        },
+        "clangd.extraConfig.features.clangTidy": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable clang-tidy diagnostics"
+        },
+        "clangd.extraConfig.features.completionParse": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Use text-based completion if the parser is not ready",
+            "Block until the parser can be used",
+            "Always used text-based completion"
+          ],
+          "description": "Whether the clang-parser is used for code-completion"
+        },
+        "clangd.extraConfig.features.completionStyle": {
+          "type": "string",
+          "default": "detailed",
+          "enum": [
+            "detailed",
+            "bundled"
+          ],
+          "enumDescriptions": [
+            "One completion item for each semantically distinct completion, with full type information",
+            "Similar completion items (e.g. function overloads) are combined. Type information shown where possible"
+          ],
+          "description": "Granularity of code completion suggestions"
+        },
+        "clangd.extraConfig.features.debugOrigin": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show origins of completion items"
+        },
+        "clangd.extraConfig.features.fallbackStyle": {
+          "type": "string",
+          "default": "LLVM",
+          "description": "clang-format style to apply by default when no .clang-format file is found"
+        },
+        "clangd.extraConfig.features.functionArgPlaceholders": {
+          "type": "boolean",
+          "default": true,
+          "description": "When disabled, completions contain only parentheses for function calls. When enabled, completions also contain placeholders for method parameters"
+        },
+        "clangd.extraConfig.features.headerInsertion": {
+          "type": "string",
+          "default": "iwyu",
+          "enum": [
+            "iwyu",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Include what you use. Insert the owning header for top-level symbols, unless the header is already directly included or the symbol is forward-declared",
+            "Never insert #include directives as part of code completion"
+          ],
+          "description": "Add #include directives when accepting code completions"
+        },
+        "clangd.extraConfig.features.headerInsertionDecorators": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prepend a circular dot or space before the completion label, depending on whether an include line will be inserted or not"
+        },
+        "clangd.extraConfig.features.importInsertions": {
+          "type": "boolean",
+          "default": false,
+          "description": "If header insertion is enabled, add #import directives when accepting code completions or fixing includes in Objective-C code"
+        },
+        "clangd.extraConfig.features.includeIneligibleResults": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include ineligible completion results (e.g. private members)"
+        },
+        "clangd.extraConfig.features.limitReferences": {
+          "type": "integer",
+          "default": 1000,
+          "description": "Limit the number of references returned by clangd. 0 means no limit"
+        },
+        "clangd.extraConfig.features.limitResults": {
+          "type": "integer",
+          "default": 100,
+          "description": "Limit the number of results returned by clangd. 0 means no limit"
+        },
+        "clangd.extraConfig.features.rerankingModel": {
+          "type": "string",
+          "default": "decision_forest",
+          "enum": [
+            "heuristics",
+            "decision_forest"
+          ],
+          "enumDescriptions": [
+            "Use heuristics to rank code completion items",
+            "Use Decision Forest model to rank completion items"
+          ],
+          "description": "Model to use to rank code-completion items"
+        },
+        "clangd.extraConfig.features.renameFileLimits": {
+          "type": "integer",
+          "default": 50,
+          "description": "Limit the number of files to be affected by symbol renaming. 0 means no limit"
+        }
+      }
+    },
+    {
+      "title": "clangd miscellaneous options",
+      "properties": {
+      "clangd.extraConfig.miscellaneous.workerThreads": {
+        "type": "integer",
+        "default": -1,
+        "markdownDescription": "Number of async workers used by clangd. Background index also uses this many workers.\n\n`-1` or less to autodetect cores count.\n\n`0` to handle client requests on main thread. Background index still uses its own thread."
+      },
+      "clangd.extraConfig.miscellaneous.mallocTrim": {
+        "type": "boolean",
+        "default": true,
+        "description": "Release memory periodically via malloc_trim(3)."
+      },
+      "clangd.extraConfig.miscellaneous.parseForwardingFunctions": {
+        "type": "boolean",
+        "default": false,
+        "description": "Parse all emplace-like functions in included headers"
+      },
+      "clangd.extraConfig.miscellaneous.pchStorage": {
+        "type": "string",
+        "default": "disk",
+        "enum": [
+          "disk",
+          "memory"
+        ],
+        "enumDescriptions": [
+          "store PCHs on disk",
+          "store PCHs in memory"
+        ],
+        "description": "Storing PCHs in memory increases memory usages, but may improve performance"
+      },
+      "clangd.extraConfig.miscellaneous.useDirtyHeaders": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use files open in the editor when parsing headers instead of reading from the disk"
+      }
+    }
+  }
+  ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.65.0",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.11.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0"
+  },
+  "extensionDependencies": [
+    "llvm-vs-code-extensions.vscode-clangd"
+  ]
+}
