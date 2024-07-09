@@ -19,17 +19,11 @@
   "keywords": [
     "C",
     "C++",
-    "CUDA",
     "clang",
-    "clangd",
-    "cmake"
+    "clangd"
   ],
   "activationEvents": [
-    "onLanguage:c",
-    "onLanguage:cpp",
-    "onLanguage:cuda-cpp",
-    "onLanguage:objective-c",
-    "onLanguage:objective-cpp"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
