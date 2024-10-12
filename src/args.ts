@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { Config, BackgroundIndex } from './config';
 
 function bool2string(value: boolean): string {
-    return value ? 'true' : 'false';
+    return value ? '1' : '0';
 }
 
 export class ClangdArguments {
@@ -21,7 +21,7 @@ export class ClangdArguments {
         if (argIdx >= 0) {
             let curValue = this.args[argIdx].trimStart().substring(fullName.length).trim();
             if (curValue.startsWith('=')) curValue = curValue.substring(1);
-            else if (curValue.length === 0) curValue = 'true';
+            else if (curValue.length === 0) curValue = '1';
 
             if (value === undefined)
                 this.args.splice(argIdx, 1);
