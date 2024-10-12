@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 
 import { ClangdArguments } from './args';
 import { Config } from './config';
@@ -8,7 +9,8 @@ const CLANGD_COMMAND_RESTART = 'clangd.restart';
 const WAIT_TIME_TO_APPLY_MS = 1000;
 
 export function activate(context: vscode.ExtensionContext) {
-	context.subscriptions.push(new ExtraConfigHandler());
+	const hash = crypto.createHash('md5').update(context.extension.id).digest('hex');
+	context.subscriptions.push(new ExtraConfigHandler((parseInt(hash, 16) % 1000) + 10));
 }
 
 export function deactivate() { }
@@ -16,19 +18,17 @@ export function deactivate() { }
 class ExtraConfigHandler implements vscode.Disposable {
 	private onDocumentChanged: vscode.Disposable;
 	private onConfigurationChanged: vscode.Disposable;
-	private clangdArgs?: ClangdArguments;
+	private clangdArgs: ClangdArguments;
 
-	constructor() {
-		this.onDocumentChanged = vscode.workspace.onDidChangeTextDocument((event) => this.didDocumentChange(event.document));
+	constructor(waitToUpdate: number = 10) {
+		this.onDocumentChanged = vscode.window.onDidChangeActiveTextEditor((event) => this.didDocumentChange(event?.document));
 		this.onConfigurationChanged = vscode.workspace.onDidChangeConfiguration((e) => this.didConfigurationChange(e));
 
-		this.clangdArgs = new ClangdArguments();
+		this.clangdArgs = new ClangdArguments(waitToUpdate);
 		Config.read().then((config) => {
-			this.clangdArgs?.setFeatures(config.features);
-			this.clangdArgs?.setMiscellaneous(config.miscellaneous);
-			this.clangdArgs?.write().then((changed) => {
-				delete this.clangdArgs;
-				this.clangdArgs = undefined;
+			this.clangdArgs.setFeatures(config.features);
+			this.clangdArgs.setMiscellaneous(config.miscellaneous);
+			this.clangdArgs.write().then((changed) => {
 				if (!changed || !config.RestartServerOnChange) return;
 
 				ExtraConfigHandler.doRestartClangd();
@@ -40,13 +40,11 @@ class ExtraConfigHandler implements vscode.Disposable {
 		this.onConfigurationChanged.dispose();
 	}
 
-	private async didDocumentChange(document: vscode.TextDocument) {
-		if (!['c', 'c++', 'cuda-cpp', 'objective-c', 'objective-cpp'].includes(document.languageId)) return;
-		if (this.clangdArgs === undefined) return;
+	private async didDocumentChange(document?: vscode.TextDocument) {
+		const lang = document?.languageId || '';
+		if (!['c', 'cpp', 'cuda-cpp', 'objective-c', 'objective-cpp'].includes(lang)) return;
 
 		const changed = await this.clangdArgs.write();
-		delete this.clangdArgs;
-		this.clangdArgs = undefined;
 
 		if (!changed) return;
 
@@ -61,8 +59,6 @@ class ExtraConfigHandler implements vscode.Disposable {
 		const changedMiscellaneousOptions = e.affectsConfiguration('clangd.extraConfig.miscellaneous');
 		if (!changedClangdArgs && !changedFeatureOptions && !changedMiscellaneousOptions) return;
 
-		if (this.clangdArgs === undefined)
-			this.clangdArgs = new ClangdArguments();
 		const config = await Config.read();
 		if (changedClangdArgs) {
 			this.clangdArgs.setFeatures(config.features);

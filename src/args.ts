@@ -7,13 +7,17 @@ function bool2string(value: boolean): string {
 }
 
 export class ClangdArguments {
+    private wait: number;
     private args: string[] = [];
+    private changed: boolean = false;
 
-    constructor() {
+    constructor(wait: number = 10) {
+        this.wait = wait;
     }
 
     async set(argName: string, value?: string) {
         const fullName = (argName.length > 1 ? '--' : '-') + argName;
+        this.changed = true;
 
         let argIdx = this.args.findIndex(arg => arg.trimStart().startsWith(fullName));
         if (argIdx >= 0) {
@@ -78,24 +82,48 @@ export class ClangdArguments {
     }
 
     async write(): Promise<boolean> {
+        if (!this.changed) return false;
+        this.changed = false;
+
         let config = vscode.workspace.getConfiguration("clangd");
         const args = config.get<string[]>('arguments', []);
         const merged = ClangdArguments.merge(this.args, args);
 
-        if (args === merged) return false;
+        if (ClangdArguments.isEqual(args, merged))
+            return false;
 
-        config.update('arguments', this.args, vscode.ConfigurationTarget.Workspace);
+        await config.update('arguments', merged, vscode.ConfigurationTarget.Workspace);
+        await ClangdArguments.sleep(this.wait);
+        if (!ClangdArguments.isEqual(vscode.workspace.getConfiguration("clangd").get<string[]>('arguments', []), merged)) {
+            this.changed = true;
+            return this.write();
+        }
         return true;
     }
 
     private static merge(from: string[], to: string[]): string[] {
-        for (const frArg in from) {
+        let result = [...to];
+        for (const frArg of from) {
             const frKey = frArg.indexOf('=') !== -1 ? frArg.substring(0, frArg.indexOf('=')).trim() : frArg;
-            let toKeyId = to.findIndex(arg => arg.trimStart().startsWith(frKey));
-            if (toKeyId == -1) to.push(frArg);
-            else if (frArg !== to[toKeyId]) to[toKeyId] = frArg;
+            const toKeyId = result.findIndex(arg => arg.trimStart().startsWith(frKey));
+            if (toKeyId === -1) result.push(frArg);
+            else if (frArg !== result[toKeyId]) result[toKeyId] = frArg;
         }
 
-        return to;
+        return result;
+    }
+
+    private static isEqual(lhs: string[], rhs: string[]): boolean {
+        if (lhs.length !== rhs.length) return false;
+
+        for (const arg of lhs) {
+            if (rhs.indexOf(arg) === -1)
+                return false;
+        }
+        return true;
+    }
+
+    private static async sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 };
