@@ -41,6 +41,7 @@ class ExtraConfigHandler implements vscode.Disposable {
 	}
 
 	private async didDocumentChange(document: vscode.TextDocument) {
+		if (!['c', 'c++', 'cuda-cpp', 'objective-c', 'objective-cpp'].includes(document.languageId)) return;
 		if (this.clangdArgs === undefined) return;
 
 		const changed = await this.clangdArgs.write();
