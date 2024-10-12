@@ -7,11 +7,9 @@ function bool2string(value: boolean): string {
 }
 
 export class ClangdArguments {
-    private args: string[];
+    private args: string[] = [];
 
     constructor() {
-        let config = vscode.workspace.getConfiguration("clangd");
-        this.args = config.get<string[]>('arguments', []);
     }
 
     async set(argName: string, value?: string) {
@@ -82,10 +80,22 @@ export class ClangdArguments {
     async write(): Promise<boolean> {
         let config = vscode.workspace.getConfiguration("clangd");
         const args = config.get<string[]>('arguments', []);
+        const merged = ClangdArguments.merge(this.args, args);
 
-        if (args === this.args) return false;
+        if (args === merged) return false;
 
         config.update('arguments', this.args, vscode.ConfigurationTarget.Workspace);
         return true;
+    }
+
+    private static merge(from: string[], to: string[]): string[] {
+        for (const frArg in from) {
+            const frKey = frArg.indexOf('=') !== -1 ? frArg.substring(0, frArg.indexOf('=')).trim() : frArg;
+            let toKeyId = to.findIndex(arg => arg.trimStart().startsWith(frKey));
+            if (toKeyId == -1) to.push(frArg);
+            else if (frArg !== to[toKeyId]) to[toKeyId] = frArg;
+        }
+
+        return to;
     }
 };
