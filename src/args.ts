@@ -9,6 +9,7 @@ function bool2string(value: boolean): string {
 export class ClangdArguments {
     private wait: number;
     private args: string[] = [];
+    private managedArgs: Set<string> = new Set();
     private changed: boolean = false;
 
     constructor(wait: number = 10) {
@@ -17,11 +18,12 @@ export class ClangdArguments {
 
     async set(argName: string, value?: string) {
         const fullName = (argName.length > 1 ? '--' : '-') + argName;
+        this.managedArgs.add(fullName);
         this.changed = true;
 
-        let argIdx = this.args.findIndex(arg => arg.trimStart().startsWith(fullName));
+        let argIdx = this.args.findIndex(arg => ClangdArguments.getArgKey(arg) === fullName);
         if (argIdx >= 0) {
-            let curValue = this.args[argIdx].trimStart().substring(fullName.length).trim();
+            let curValue = this.args[argIdx].trim().substring(fullName.length).trim();
             if (curValue.startsWith('=')) curValue = curValue.substring(1);
             else if (curValue.length === 0) curValue = '1';
 
@@ -75,7 +77,8 @@ export class ClangdArguments {
             this.set('sync', "true");
         }
 
-        this.set('malloc-trim', bool2string(miscellaneous.mallocTrim));
+        // Removed in clangd 23.
+        this.set('malloc-trim');
         this.set('parse-forwarding-functions', bool2string(miscellaneous.parseForwardingFunctions));
         this.set('pch-storage', miscellaneous.pchStorage);
         this.set('use-dirty-headers', bool2string(miscellaneous.useDirtyHeaders));
@@ -87,7 +90,7 @@ export class ClangdArguments {
 
         let config = vscode.workspace.getConfiguration("clangd");
         const args = config.get<string[]>('arguments', []);
-        const merged = ClangdArguments.merge(this.args, args);
+        const merged = ClangdArguments.merge(this.args, args, this.managedArgs);
 
         if (ClangdArguments.isEqual(args, merged))
             return false;
@@ -101,16 +104,17 @@ export class ClangdArguments {
         return true;
     }
 
-    private static merge(from: string[], to: string[]): string[] {
-        let result = [...to];
-        for (const frArg of from) {
-            const frKey = frArg.indexOf('=') !== -1 ? frArg.substring(0, frArg.indexOf('=')).trim() : frArg;
-            const toKeyId = result.findIndex(arg => arg.trimStart().startsWith(frKey));
-            if (toKeyId === -1) result.push(frArg);
-            else if (frArg !== result[toKeyId]) result[toKeyId] = frArg;
-        }
+    private static merge(from: string[], to: string[], managedArgs: Set<string>): string[] {
+        const result = to.filter(arg => !managedArgs.has(ClangdArguments.getArgKey(arg)));
+        result.push(...from);
 
         return result;
+    }
+
+    private static getArgKey(arg: string): string {
+        const trimmed = arg.trim();
+        const eqIdx = trimmed.indexOf('=');
+        return eqIdx === -1 ? trimmed : trimmed.substring(0, eqIdx).trim();
     }
 
     private static isEqual(lhs: string[], rhs: string[]): boolean {

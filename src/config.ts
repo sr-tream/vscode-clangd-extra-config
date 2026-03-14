@@ -69,14 +69,12 @@ export namespace Config {
 
     export interface miscellaneous {
         workerThreads: number;
-        mallocTrim: boolean;
         parseForwardingFunctions: boolean;
         pchStorage: PchStorage;
         useDirtyHeaders: boolean;
     };
     export const DEFAULT_MISCELLANEOUS: miscellaneous = {
         workerThreads: -1,
-        mallocTrim: true,
         parseForwardingFunctions: false,
         pchStorage: PchStorage.disk,
         useDirtyHeaders: false

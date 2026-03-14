@@ -5,7 +5,7 @@
   "author": "SR_team",
   "publisher": "sr-team",
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/sr-tream/vscode-clangd-extra-config.git"
@@ -177,11 +177,6 @@
         "type": "integer",
         "default": -1,
         "markdownDescription": "Number of async workers used by clangd. Background index also uses this many workers.\n\n`-1` or less to autodetect cores count.\n\n`0` to handle client requests on main thread. Background index still uses its own thread."
-      },
-      "clangd.extraConfig.miscellaneous.mallocTrim": {
-        "type": "boolean",
-        "default": true,
-        "description": "Release memory periodically via malloc_trim(3)."
       },
       "clangd.extraConfig.miscellaneous.parseForwardingFunctions": {
         "type": "boolean",
